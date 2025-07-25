@@ -1,0 +1,22 @@
+{
+  "id": "c848d440-e094-41f2-bce0-71724283ed34",
+  "name": "専門家ロールプレイ",
+  "description": "特定の専門分野の専門家として回答",
+  "template": "あなたは{expertise}の専門家です。{years}年の経験があります。\n\n質問: {question}\n\n専門知識を活かして詳細に回答してください:",
+  "variables": [
+    "years",
+    "question",
+    "expertise"
+  ],
+  "type": "roleplay",
+  "category": "expert",
+  "tags": [
+    "roleplay",
+    "expert"
+  ],
+  "usage_count": 0,
+  "quality_score": 0.0,
+  "created_by": "system",
+  "created_at": "2025-07-25T04:44:42.908817",
+  "updated_at": "2025-07-25T04:44:42.908823"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "715fa588-bfad-41fb-b280-518c4e0b7561",
+  "name": "コード生成",
+  "description": "プログラミングコード生成用",
+  "template": "言語: {language}\n要件: {requirements}\n\n以下の仕様でコードを生成してください:\n- {specifications}\n\nコード:\n```{language}\n{code}\n```\n\n説明:",
+  "variables": [
+    "language",
+    "requirements",
+    "specifications",
+    "code"
+  ],
+  "type": "completion",
+  "category": "coding",
+  "tags": [
+    "code",
+    "programming"
+  ],
+  "usage_count": 0,
+  "quality_score": 0.0,
+  "created_by": "system",
+  "created_at": "2025-07-25T04:44:42.909203",
+  "updated_at": "2025-07-25T04:44:42.909208"
+}
