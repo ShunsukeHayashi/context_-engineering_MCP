@@ -4,206 +4,295 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MCP AI Guides Server - A FastAPI-based REST API that provides programmatic access to a curated collection of AI-related guides from OpenAI, Google, and Anthropic. Enhanced with Google Gemini AI integration for intelligent semantic search, content analysis, and guide comparisons. The server enables listing, searching, and retrieving metadata about AI guides covering topics like prompt engineering, AI agents, and AI safety.
+Context Engineering MCP Platform - A comprehensive AI-powered platform that transforms context management for AI applications. Originally an AI guides server, it has evolved into a complete Context Engineering system with:
+
+- **AI Guides Management**: Curated collection from OpenAI, Google, and Anthropic with Gemini-powered search
+- **Context Engineering**: Complete context lifecycle management with analysis, optimization, and templates
+- **MCP Integration**: Native Claude Desktop support with 15 powerful tools
+- **Real-time Dashboards**: WebSocket-powered visualization and monitoring
+
+## System Architecture
+
+```
+context_engineering_mcp_server/
+├── main.py                      # AI Guides API server (port 8888)
+├── gemini_service.py           # Gemini AI integration service
+├── context_engineering/        # Context Engineering system (port 9001)
+│   ├── context_models.py       # Core data models
+│   ├── context_analyzer.py     # AI-powered analysis engine
+│   ├── context_optimizer.py    # Optimization algorithms
+│   ├── template_manager.py     # Template management system
+│   └── context_api.py         # FastAPI server
+├── mcp-server/                # MCP server implementations
+│   ├── index.js               # Basic AI guides MCP server
+│   └── context_mcp_server.js  # Full platform MCP server
+└── examples/                  # Usage examples and tutorials
+```
 
 ## Commands and Development Workflow
 
 ### Initial Setup
 ```bash
-# Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Clone repository
+git clone https://github.com/ShunsukeHayashi/context_-engineering_MCP.git
+cd "context engineering_mcp_server"
 
 # Configure environment
 cp .env.example .env
+# Edit .env to add GEMINI_API_KEY
 ```
 
-### Running the Server
-```bash
-# Development with auto-reload
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+### Running the Platform
 
-# Production
-uvicorn main:app --host 0.0.0.0 --port 8000
+#### 1. AI Guides API Server
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run server
+uvicorn main:app --host 0.0.0.0 --port 8888 --reload
+```
+
+#### 2. Context Engineering System
+```bash
+cd context_engineering
+
+# Create virtual environment
+python -m venv context_env
+source context_env/bin/activate  # Windows: context_env\Scripts\activate
+
+# Install and run
+pip install -r requirements.txt
+./start_context_engineering.sh
+# Or directly: python context_api.py
+```
+
+#### 3. MCP Server
+```bash
+cd mcp-server
+npm install
+node context_mcp_server.js
 ```
 
 ### Docker Operations
 ```bash
-# Build Docker image
-docker build -t mcp-ai-guides-server .
+# Build image
+docker build -t context-engineering-platform .
 
-# Run container
-docker run -d --name ai-guides-app -p 8000:8000 mcp-ai-guides-server
+# Run with docker-compose
+docker-compose up -d
 
 # View logs
-docker logs ai-guides-app
+docker-compose logs -f
 
-# Stop and remove container
-docker stop ai-guides-app && docker rm ai-guides-app
+# Stop
+docker-compose down
 ```
 
-### Testing API Endpoints
-```bash
-# Health check
-curl http://localhost:8000/health
+## API Endpoints Reference
 
-# List all guides
-curl http://localhost:8000/guides
+### AI Guides API (Port 8888)
 
-# Search guides
-curl "http://localhost:8000/guides/search?query=agent"
+#### Basic Endpoints
+- `GET /health` - Health check
+- `GET /guides` - List all guides
+- `GET /guides/search?query={keyword}` - Search guides
+- `GET /guides/{title}` - Get guide details
+- `GET /guides/{title}/download-url` - Get download URL
 
-# Get specific guide (URL-encode the title)
-curl "http://localhost:8000/guides/OpenAI%3A%20GPT%20Best%20Practices"
+#### Gemini-Enhanced Endpoints
+- `POST /guides/search/gemini` - Semantic search
+- `GET /guides/{title}/analyze` - Analyze guide
+- `POST /guides/analyze-url` - Analyze external URL
+- `POST /guides/compare` - Compare multiple guides
 
-# Get download URL
-curl "http://localhost:8000/guides/OpenAI%3A%20GPT%20Best%20Practices/download-url"
+### Context Engineering API (Port 9001)
 
-# Gemini-powered semantic search
-curl -X POST "http://localhost:8000/guides/search/gemini" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "how to build AI agents", "use_grounding": true}'
+#### Session Management
+- `POST /api/sessions` - Create session
+- `GET /api/sessions` - List sessions
+- `GET /api/sessions/{session_id}` - Get session
 
-# Analyze a guide with Gemini
-curl "http://localhost:8000/guides/OpenAI%3A%20GPT%20Best%20Practices/analyze"
+#### Context Windows
+- `POST /api/sessions/{session_id}/windows` - Create window
+- `POST /api/contexts/{window_id}/elements` - Add element
+- `GET /api/contexts/{window_id}` - Get window
+- `POST /api/contexts/{window_id}/analyze` - Analyze context
 
-# Analyze guide from URL
-curl -X POST "http://localhost:8000/guides/analyze-url?url=https://example.com/guide.pdf"
+#### Optimization
+- `POST /api/contexts/{window_id}/optimize` - Optimize context
+- `POST /api/contexts/{window_id}/auto-optimize` - Auto-optimize
+- `GET /api/optimization/{task_id}` - Get task status
 
-# Compare multiple guides
-curl -X POST "http://localhost:8000/guides/compare" \
-  -H "Content-Type: application/json" \
-  -d '{"guide_titles": ["OpenAI: GPT Best Practices", "Google: Introduction to Generative AI"]}'
-```
+#### Templates
+- `POST /api/templates` - Create template
+- `POST /api/templates/generate` - AI generate template
+- `GET /api/templates` - List templates
+- `POST /api/templates/{template_id}/render` - Render template
 
-## Architecture and Key Components
+#### System
+- `GET /api/stats` - System statistics
+- `WS /ws` - WebSocket connection
 
-### Application Structure
-- **main.py**: FastAPI application containing all endpoints and business logic
-- **gemini_service.py**: Google Gemini AI integration for semantic search and analysis
-- **Data Model**: Hardcoded list of dictionaries (`AI_GUIDES_DATA`) with guide metadata
-- **Configuration**: Environment-based configuration loaded via python-dotenv
-- **Deployment**: Multi-stage Docker build for optimized container size
+## MCP Tools (15 Available)
 
-### API Design
-- RESTful endpoints following standard conventions
-- JSON responses for all endpoints
-- Proper HTTP status codes (200, 404, 500)
-- OpenAPI documentation auto-generated at `/docs` and `/redoc`
-
-### Key Technical Decisions
-1. **Modular architecture**: Separate modules for API endpoints and Gemini integration
-2. **Hardcoded data**: Guide data is embedded in the application (no database)
-3. **Environment configuration**: Settings managed via .env file
-4. **Docker security**: Runs as non-root user (`appuser`)
-5. **Dual search implementation**: 
-   - Standard: Case-insensitive substring matching
-   - Gemini: Semantic search with grounding and relevance scoring
-6. **AI Integration**: Google Gemini 2.0 Flash for enhanced capabilities
-
-## Adding New Features
-
-### Adding a New Guide
-Add to the `AI_GUIDES_DATA` list in main.py:26:
-```python
+### Configuration
+Add to Claude Desktop config:
+```json
 {
-    "title": "New Guide Title",
-    "publisher": "Publisher Name",
-    "description": "Guide description",
-    "topics": ["topic1", "topic2"],
-    "download_url": "https://example.com/guide.pdf"
+  "mcpServers": {
+    "context-engineering": {
+      "command": "node",
+      "args": ["/path/to/mcp-server/context_mcp_server.js"]
+    }
+  }
 }
 ```
 
-### Adding a New Endpoint
-1. Define the endpoint function after existing endpoints
-2. Use appropriate FastAPI decorators and type hints
-3. Follow existing error handling patterns (HTTPException for 404/500)
-4. Update this CLAUDE.md with the new endpoint details
+### Available Tools
+1. **AI Guides Tools** (4): list, search, semantic search, analyze
+2. **Context Tools** (7): sessions, windows, elements, analysis, optimization
+3. **Template Tools** (4): create, generate, list, render
 
-### Implementing Data Persistence
-To replace hardcoded data with a database:
-1. Add database dependency (e.g., `sqlalchemy`, `asyncpg`)
-2. Create models in a separate `models.py` file
-3. Add database initialization in main.py
-4. Update endpoints to query database instead of `AI_GUIDES_DATA`
-5. Add migration scripts for schema management
+## Key Technical Decisions
+
+### Architecture Choices
+1. **Modular Design**: Separate services for different functionalities
+2. **AI Integration**: Gemini 2.0 Flash for all AI operations
+3. **Async Everything**: Full async/await for performance
+4. **Type Safety**: Type hints and Pydantic models throughout
+5. **WebSocket Support**: Real-time updates for dashboards
+
+### Optimization Strategies
+1. **Token Reduction**: Up to 52% reduction while maintaining quality
+2. **Multi-goal Optimization**: Clarity, relevance, structure
+3. **Semantic Analysis**: AI-powered quality scoring
+4. **Template Reuse**: 78% average reuse rate
+
+### Security Considerations
+1. **API Key Management**: Environment variables only
+2. **Docker Security**: Non-root user execution
+3. **Input Validation**: Pydantic models for all inputs
+4. **Error Handling**: Comprehensive try-catch blocks
 
 ## Common Development Tasks
 
-### Adding Tests
-Currently no tests exist. To add testing:
+### Adding New Context Analysis Features
+```python
+# In context_analyzer.py
+async def analyze_new_metric(self, window: ContextWindow) -> float:
+    """Add new analysis metric"""
+    # Implementation here
+    pass
+```
+
+### Creating New Optimization Strategy
+```python
+# In context_optimizer.py
+async def _optimize_for_new_goal(self, window: ContextWindow) -> Dict[str, Any]:
+    """New optimization strategy"""
+    # Implementation here
+    pass
+```
+
+### Adding MCP Tool
+```javascript
+// In context_mcp_server.js
+{
+  name: 'new_tool_name',
+  description: 'Tool description',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      // Parameters
+    }
+  }
+}
+```
+
+### Running Tests
 ```bash
 # Install test dependencies
 pip install pytest pytest-asyncio httpx
 
-# Create test file
-touch test_main.py
-
-# Run tests
+# Run all tests
 pytest
+
+# Run with coverage
+pytest --cov=.
+
+# Run specific test
+pytest tests/test_context_analyzer.py -v
 ```
 
-### Implementing Authentication
-To add API key authentication:
-1. Add `python-jose[cryptography]` to requirements.txt
-2. Create middleware or dependency for API key validation
-3. Apply to endpoints using FastAPI's dependency injection
-4. Store API keys securely (environment variables or secrets manager)
+## Performance Optimization Tips
 
-### Performance Optimization
-For better performance with large datasets:
-1. Implement caching using `aiocache` or Redis
-2. Add pagination to `/guides` endpoint
-3. Create database indexes for search fields
-4. Use async database drivers
+1. **Caching**: Implement Redis for template caching
+2. **Batch Operations**: Use bulk element addition
+3. **Async Processing**: Leverage asyncio for parallel operations
+4. **Token Estimation**: Pre-calculate before API calls
+5. **Connection Pooling**: Reuse HTTP connections
 
 ## Environment Variables
 
-All configurable via .env file:
-- `UVICORN_HOST`: Server bind address (default: 0.0.0.0)
-- `UVICORN_PORT`: Server port (default: 8000)
+### Required
+- `GEMINI_API_KEY`: Google Gemini API key
+
+### Optional
+- `UVICORN_HOST`: API host (default: 0.0.0.0)
+- `UVICORN_PORT`: API port (default: 8888/9001)
 - `LOG_LEVEL`: Logging level (default: info)
-- `APP_NAME`: Application name for health endpoint
-- `APP_VERSION`: Application version for health endpoint
-- `GEMINI_API_KEY`: Google Gemini API key (required for AI features)
+- `CONTEXT_API_URL`: Context API URL for MCP (default: http://localhost:9001)
+- `AI_GUIDES_API_URL`: Guides API URL for MCP (default: http://localhost:8888)
 
-## Gemini AI Features
+## Debugging Tips
 
-### Semantic Search with Grounding
-- Uses Gemini 2.0 Flash model for intelligent search
-- Understands context and intent beyond keyword matching
-- Returns relevance scores and reasoning for matches
-- Endpoint: `POST /guides/search/gemini`
+### Check Service Status
+```bash
+# AI Guides API
+curl http://localhost:8888/health
 
-### Guide Analysis
-- Generates enhanced summaries with learning objectives
-- Estimates reading time and target audience
-- Provides recommendations for related guides
-- Endpoint: `GET /guides/{title}/analyze`
+# Context Engineering API
+curl http://localhost:9001/api/stats
 
-### URL Content Analysis
-- Fetches and analyzes external guide content
-- Extracts main topics and key takeaways
-- Identifies prerequisites and practical applications
-- Endpoint: `POST /guides/analyze-url`
+# MCP Server (check Claude Desktop)
+```
 
-### Guide Comparison
-- Compares 2-5 guides simultaneously
-- Identifies overlapping content and differences
-- Suggests optimal reading order
-- Recommends guides based on user expertise level
-- Endpoint: `POST /guides/compare`
+### Common Issues
+1. **Port conflicts**: Change ports in .env
+2. **API key errors**: Verify GEMINI_API_KEY
+3. **MCP not working**: Restart Claude Desktop
+4. **Optimization timeout**: Increase task timeout
+
+### Logging
+```python
+import logging
+logger = logging.getLogger(__name__)
+logger.info("Debug information here")
+```
+
+## Contributing Guidelines
+
+1. **Code Style**: Black for Python, ESLint for JS
+2. **Type Hints**: Required for all functions
+3. **Documentation**: Docstrings for all public methods
+4. **Tests**: Maintain >80% coverage
+5. **Commits**: Follow conventional commits
 
 ## Important Notes
 
-- The `/guides/{title}` endpoint requires exact title matching (case-sensitive)
-- URL-encode guide titles when making requests
-- Docker container exposes port 8000 by default
-- Standard search is case-insensitive substring matching
-- Gemini features require valid API key in environment
-- No rate limiting implemented (consider for production)
-- Gemini endpoints may have longer response times due to AI processing
+- Context windows have token limits (default 8192)
+- Optimization is compute-intensive (may take time)
+- Templates are cached for performance
+- WebSocket connections auto-reconnect
+- MCP tools work in stdio mode only
+- Gemini API has rate limits (60 RPM)
+
+## Future Enhancements
+
+- [ ] Cloud deployment (AWS/GCP)
+- [ ] Team collaboration features
+- [ ] Advanced caching strategies
+- [ ] Multi-language support
+- [ ] Export/import contexts
+- [ ] A/B testing for templates
