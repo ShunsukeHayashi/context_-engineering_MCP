@@ -14,19 +14,29 @@ Context Engineering MCP Platform - A comprehensive AI-powered platform that tran
 ## System Architecture
 
 ```
-context_engineering_mcp_server/
+context_engineering_MCP/
 ├── main.py                      # AI Guides API server (port 8888)
 ├── gemini_service.py           # Gemini AI integration service
+├── scripts/                    # Convenience scripts for common tasks
+│   ├── quickstart.sh           # Full platform setup
+│   ├── start_context_engineering.sh  # Context Engineering system
+│   ├── run-mcp-server.sh       # MCP server startup
+│   ├── test-mcp.sh            # MCP server testing
+│   └── start_workflow_system.sh # Workflow system
 ├── context_engineering/        # Context Engineering system (port 9001)
-│   ├── context_models.py       # Core data models
-│   ├── context_analyzer.py     # AI-powered analysis engine
-│   ├── context_optimizer.py    # Optimization algorithms
-│   ├── template_manager.py     # Template management system
-│   └── context_api.py         # FastAPI server
-├── mcp-server/                # MCP server implementations
-│   ├── index.js               # Basic AI guides MCP server
-│   └── context_mcp_server.js  # Full platform MCP server
-└── examples/                  # Usage examples and tutorials
+│   ├── context_models.py       # Core data models (Pydantic/dataclass)
+│   ├── context_analyzer.py     # AI-powered context analysis
+│   ├── context_optimizer.py    # Multi-strategy optimization
+│   ├── template_manager.py     # Template CRUD and rendering
+│   ├── context_api.py          # FastAPI server
+│   └── templates/              # Stored prompt templates
+├── mcp-server/                 # MCP server implementations
+│   ├── index.js                # Basic AI guides MCP server
+│   ├── context_mcp_server.js   # Full platform MCP server (15 tools)
+│   └── package.json            # Node.js dependencies
+├── workflow_system/            # Workflow automation (experimental)
+├── examples/                   # Usage examples and tutorials
+└── requirements.txt            # Unified Python dependencies
 ```
 
 ## Commands and Development Workflow
@@ -35,7 +45,7 @@ context_engineering_mcp_server/
 ```bash
 # Clone repository
 git clone https://github.com/ShunsukeHayashi/context_-engineering_MCP.git
-cd "context engineering_mcp_server"
+cd context_engineering_MCP
 
 # Configure environment
 cp .env.example .env
@@ -44,34 +54,79 @@ cp .env.example .env
 
 ### Running the Platform
 
-#### 1. AI Guides API Server
+#### Quick Start (Recommended)
 ```bash
-# Install dependencies
+# Use the convenience script for full setup
+./scripts/quickstart.sh
+```
+
+#### Manual Setup
+
+##### 1. AI Guides API Server (Port 8888)
+```bash
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Run server
+# Run AI Guides server
 uvicorn main:app --host 0.0.0.0 --port 8888 --reload
 ```
 
-#### 2. Context Engineering System
+##### 2. Context Engineering System (Port 9001)
 ```bash
-cd context_engineering
+# Use the setup script
+./scripts/start_context_engineering.sh
 
-# Create virtual environment
+# Or run manually
+cd context_engineering
 python -m venv context_env
 source context_env/bin/activate  # Windows: context_env\Scripts\activate
-
-# Install and run
-pip install -r requirements.txt
-./start_context_engineering.sh
-# Or directly: python context_api.py
+pip install -r ../requirements.txt
+python context_api.py
 ```
 
-#### 3. MCP Server
+##### 3. MCP Server
 ```bash
+# Use the MCP server script
+./scripts/run-mcp-server.sh
+
+# Or run manually
 cd mcp-server
 npm install
 node context_mcp_server.js
+```
+
+##### 4. Workflow System (Optional, Port varies)
+```bash
+./scripts/start_workflow_system.sh
+```
+
+### Testing
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=. --cov-report=html
+
+# Run specific test file
+pytest tests/test_context_analyzer.py -v
+
+# Test MCP server
+./scripts/test-mcp.sh
+```
+
+### Linting and Formatting
+```bash
+# Python formatting
+black .
+isort .
+
+# Python linting
+ruff check .
+
+# Node.js (MCP server)
+cd mcp-server
+npm run lint
 ```
 
 ### Docker Operations
@@ -154,75 +209,201 @@ Add to Claude Desktop config:
 2. **Context Tools** (7): sessions, windows, elements, analysis, optimization
 3. **Template Tools** (4): create, generate, list, render
 
-## Key Technical Decisions
+## Architecture & Technical Decisions
 
-### Architecture Choices
-1. **Modular Design**: Separate services for different functionalities
-2. **AI Integration**: Gemini 2.0 Flash for all AI operations
-3. **Async Everything**: Full async/await for performance
-4. **Type Safety**: Type hints and Pydantic models throughout
-5. **WebSocket Support**: Real-time updates for dashboards
+### Core Architecture Patterns
+1. **Multi-Service Design**: Three independent FastAPI services (AI Guides, Context Engineering, Workflow)
+2. **MCP Protocol Integration**: Native Claude Desktop support with stdio transport
+3. **Async-First Design**: All I/O operations use asyncio for high concurrency
+4. **Type Safety**: Comprehensive type hints with Pydantic models and dataclasses
+5. **WebSocket Real-time**: Live updates for context optimization progress
+
+### Data Models Architecture
+The system uses a layered data model approach:
+- **ContextElement**: Basic building blocks with content, type, priority
+- **ContextWindow**: Collections of elements with token management
+- **ContextSession**: High-level groupings for project organization
+- **PromptTemplate**: Reusable components with variable substitution
+- **OptimizationTask**: Async task tracking for long-running operations
+
+### AI Integration Strategy
+- **Single AI Provider**: Gemini 2.0 Flash for all AI operations (analysis, optimization, generation)
+- **Prompt Engineering**: Specialized prompts for different analysis types
+- **Rate Limiting**: Built-in respect for Gemini API limits (60 RPM)
+- **Error Recovery**: Graceful degradation when AI services are unavailable
+
+### Optimization Engine Design
+Multi-strategy optimization with measurable goals:
+- **Token Reduction**: Remove redundancy while preserving meaning
+- **Clarity Enhancement**: Improve instruction precision
+- **Relevance Boosting**: Prioritize important information
+- **Structure Improvement**: Logical flow optimization
+
+## Prompt Engineering Architecture
+
+### Template System Design
+The platform uses a sophisticated template management system with the following hierarchy:
+
+#### Template Types (PromptTemplateType Enum)
+- **COMPLETION**: Basic completion prompts
+- **CHAT**: Conversational chat templates
+- **INSTRUCT**: Instruction-based prompts
+- **FEWSHOT**: Few-shot learning templates
+- **CHAIN_OF_THOUGHT**: Step-by-step reasoning prompts
+- **ROLEPLAY**: Role-based interaction templates
+
+#### Template Components
+```python
+class PromptTemplate:
+    id: str                    # Unique identifier
+    name: str                  # Human-readable name
+    description: str           # Template purpose
+    template: str              # Template with {variables}
+    variables: List[str]       # Required variables list
+    type: PromptTemplateType   # Template category
+    category: str              # Grouping (qa, expert, code, etc.)
+    tags: List[str]           # Searchable tags
+    usage_count: int          # Analytics tracking
+    quality_score: float      # AI-evaluated quality (0-100)
+```
+
+#### Pre-built Templates
+The system includes 5 default templates:
+1. **基本的な質問応答** - Simple Q&A format
+2. **専門家ロールプレイ** - Expert role-based responses
+3. **段階的思考プロセス** - Chain of thought reasoning
+4. **Few-Shot学習** - Example-based learning
+5. **コード生成** - Programming task templates
+
+### Context Analysis Engine
+
+#### Analysis Metrics
+The ContextAnalyzer evaluates contexts across multiple dimensions:
+
+```python
+# Basic Metrics
+- total_elements: Number of context elements
+- total_tokens: Current token count
+- token_utilization: Percentage of max tokens used
+- avg_element_length: Average content length
+
+# Structure Analysis
+- element_type_distribution: Distribution of element types
+- priority_distribution: Priority level analysis
+- role_diversity: Variety of roles represented
+
+# Semantic Analysis (AI-powered)
+- semantic_consistency: How well ideas flow together
+- information_density: Information per token ratio
+- clarity_score: Readability assessment
+- relevance_mapping: Content relevance to purpose
+```
+
+#### Quality Assessment Process
+1. **Quantitative Analysis**: Token counts, distributions, ratios
+2. **AI Semantic Analysis**: Gemini 2.0 evaluates meaning and flow
+3. **Quality Scoring**: Combined score (0-100) with specific issues
+4. **Recommendations**: Actionable improvement suggestions
 
 ### Optimization Strategies
-1. **Token Reduction**: Up to 52% reduction while maintaining quality
-2. **Multi-goal Optimization**: Clarity, relevance, structure
-3. **Semantic Analysis**: AI-powered quality scoring
-4. **Template Reuse**: 78% average reuse rate
 
-### Security Considerations
-1. **API Key Management**: Environment variables only
-2. **Docker Security**: Non-root user execution
-3. **Input Validation**: Pydantic models for all inputs
-4. **Error Handling**: Comprehensive try-catch blocks
+#### Multi-Goal Optimization
+The optimizer can target multiple goals simultaneously:
+
+```python
+# Available Optimization Goals
+- "reduce_tokens": Minimize token usage while preserving meaning
+- "improve_clarity": Enhance readability and understanding
+- "increase_relevance": Focus on most important information
+- "enhance_structure": Improve logical flow and organization
+- "boost_specificity": Add concrete details and examples
+```
+
+#### Optimization Process
+1. **Analysis Phase**: Comprehensive context evaluation
+2. **Strategy Selection**: AI chooses optimal approaches
+3. **Content Transformation**: Apply selected optimizations
+4. **Validation**: Ensure quality maintained or improved
+5. **Metrics Reporting**: Before/after comparison
 
 ## Common Development Tasks
 
-### Adding New Context Analysis Features
+### Adding New Template Types
 ```python
-# In context_analyzer.py
-async def analyze_new_metric(self, window: ContextWindow) -> float:
-    """Add new analysis metric"""
-    # Implementation here
-    pass
+# In context_models.py
+class PromptTemplateType(Enum):
+    NEW_TYPE = "new_type"
+
+# In template_manager.py - _initialize_default_templates()
+{
+    "name": "New Template Type",
+    "description": "Description of the new template",
+    "template": "Template with {variables}",
+    "type": PromptTemplateType.NEW_TYPE,
+    "category": "category_name",
+    "tags": ["tag1", "tag2"]
+}
 ```
 
-### Creating New Optimization Strategy
+### Adding Analysis Metrics
+```python
+# In context_analyzer.py
+def _calculate_new_metric(self, window: ContextWindow) -> Dict[str, float]:
+    """Add new analysis metric"""
+    # Calculate your metric
+    return {"new_metric_name": metric_value}
+
+# Add to analyze_context_window()
+new_metrics = self._calculate_new_metric(window)
+analysis.metrics.update(new_metrics)
+```
+
+### Creating Optimization Strategies
 ```python
 # In context_optimizer.py
 async def _optimize_for_new_goal(self, window: ContextWindow) -> Dict[str, Any]:
     """New optimization strategy"""
-    # Implementation here
-    pass
+    # Implement optimization logic
+    return {
+        "optimized_elements": modified_elements,
+        "metrics": improvement_metrics,
+        "explanation": "What was changed and why"
+    }
 ```
 
-### Adding MCP Tool
+### Adding MCP Tools
 ```javascript
 // In context_mcp_server.js
 {
-  name: 'new_tool_name',
-  description: 'Tool description',
+  name: 'new_context_tool',
+  description: 'Description of what the tool does',
   inputSchema: {
     type: 'object',
     properties: {
-      // Parameters
-    }
+      window_id: { type: 'string', description: 'Context window ID' },
+      custom_param: { type: 'string', description: 'Custom parameter' }
+    },
+    required: ['window_id']
   }
 }
 ```
 
-### Running Tests
+### Development and Testing
 ```bash
-# Install test dependencies
-pip install pytest pytest-asyncio httpx
+# Install development dependencies (included in requirements.txt)
+pip install -r requirements.txt
 
 # Run all tests
 pytest
 
 # Run with coverage
-pytest --cov=.
+pytest --cov=. --cov-report=html
 
 # Run specific test
 pytest tests/test_context_analyzer.py -v
+
+# Test MCP server
+./scripts/test-mcp.sh
 ```
 
 ## Performance Optimization Tips
